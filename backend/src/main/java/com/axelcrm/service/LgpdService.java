@@ -150,8 +150,8 @@ public class LgpdService {
         return new LeadResponse(
                 lead.getId(), lead.getName(), lead.getEmail(), lead.getPhone(),
                 lead.getCompany(), lead.getPosition(), lead.getSource(), lead.getStage(),
-                lead.getEstimatedValue(), lead.getNotes(), assignedTo,
-                lead.getCreatedAt(), lead.getUpdatedAt()
+                lead.getEstimatedValue(), lead.getNotes(), lead.getScore(), lead.getConvertedAt(),
+                assignedTo, lead.getCreatedAt(), lead.getUpdatedAt()
         );
     }
 
