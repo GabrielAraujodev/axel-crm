@@ -71,6 +71,15 @@ export class AuthService {
     this.currentUser$.next(user);
   }
 
+  updateCurrentUser(user: Partial<User>): void {
+    const current = this.currentUser;
+    if (current) {
+      const updated = { ...current, ...user };
+      localStorage.setItem(USER_KEY, JSON.stringify(updated));
+      this.currentUser$.next(updated);
+    }
+  }
+
   private storedUser(): User | null {
     const json = localStorage.getItem(USER_KEY);
     return json ? JSON.parse(json) : null;
