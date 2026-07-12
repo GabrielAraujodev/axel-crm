@@ -55,6 +55,11 @@ export class ShellComponent implements OnInit, OnDestroy {
   }
 
   userName = '';
+  userRole = '';
+
+  isAdmin(): boolean {
+    return this.userRole === 'ADMIN' || this.userRole === 'SUPER_ADMIN';
+  }
   notifications: any[] = [];
   unreadCount = 0;
   private pollingSub?: any;
@@ -221,6 +226,7 @@ export class ShellComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.authService.user$.pipe(takeUntil(this.destroy$)).subscribe(u => {
       this.userName = u ? u.name : '';
+      this.userRole = u ? u.role : '';
       if (u) {
         this.startNotificationPolling();
         if (!localStorage.getItem('systemOnboardingTourCompleted')) {
