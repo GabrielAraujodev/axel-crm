@@ -1,0 +1,88 @@
+<div class="integrations-container">
+  <div class="header-section">
+    <h1>Integrações AxelPRO</h1>
+    <p>Conecte seus aplicativos externos e aproveite recursos avançados de IA</p>
+  </div>
+
+  <div class="integrations-grid">
+    <!-- Google OAuth2 Card -->
+    <div class="integration-card glass-panel" [class.connected]="googleConnected">
+      <div class="card-header">
+        <mat-icon class="brand-icon google">sync</mat-icon>
+        <div class="header-info">
+          <h2>Google Workspace</h2>
+          <p>Sincronize Agenda, Gmail e Contatos profissionais automaticamente</p>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <div class="connection-status" *ngIf="googleConnected">
+          <span class="status-indicator active"></span>
+          <span>Conectado como <strong>{{ googleEmail }}</strong></span>
+        </div>
+        <div class="connection-status" *ngIf="!googleConnected">
+          <span class="status-indicator inactive"></span>
+          <span>Desconectado</span>
+        </div>
+
+        <div class="synced-events" *ngIf="googleConnected && events.length > 0">
+          <h4>Próximos Compromissos Sincronizados:</h4>
+          <div class="event-item" *ngFor="let e of events">
+            <mat-icon>event</mat-icon>
+            <div class="event-info">
+              <span class="event-title">{{ e.title }}</span>
+              <span class="event-time">{{ e.time }} · {{ e.location }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button mat-flat-button color="primary" *ngIf="!googleConnected" (click)="connectGoogle()" [disabled]="loading">
+          Conectar Conta Google
+        </button>
+        <button mat-stroked-button color="warn" *ngIf="googleConnected" (click)="disconnectGoogle()" [disabled]="loading">
+          Desconectar Conta
+        </button>
+      </div>
+    </div>
+
+    <!-- WhatsApp Card -->
+    <div class="integration-card glass-panel connected">
+      <div class="card-header">
+        <mat-icon class="brand-icon whatsapp">chat</mat-icon>
+        <div class="header-info">
+          <h2>Redirecionamento WhatsApp</h2>
+          <p>Acelere contatos via links rápidos com templates pré-configurados</p>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <div class="connection-status">
+          <span class="status-indicator active"></span>
+          <span>Ativo no CRM</span>
+        </div>
+        <p class="desc-text">Gere links para o WhatsApp Web automaticamente nas listagens de leads e contatos jurídicos, reduzindo o tempo de prospecção.</p>
+      </div>
+    </div>
+
+    <!-- Gemini AI Card -->
+    <div class="integration-card glass-panel connected">
+      <div class="card-header">
+        <mat-icon class="brand-icon gemini">psychology</mat-icon>
+        <div class="header-info">
+          <h2>Google Gemini AI</h2>
+          <p>Geração de pareceres técnicos e laudos periciais com inteligência artificial</p>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <div class="connection-status">
+          <span class="status-indicator active"></span>
+          <span>Ativo em Caixas de Texto</span>
+        </div>
+        <p class="desc-text">Use o assistente integrado nos campos de descrição dos projetos para gerar esboços formais com apenas um clique.</p>
+      </div>
+    </div>
+  </div>
+</div>

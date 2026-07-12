@@ -1,0 +1,424 @@
+<div class="client-detail-container" *ngIf="client; else loadingSpinner">
+  <!-- Header / Summary -->
+  <div class="client-header">
+    <div class="header-left">
+      <button mat-icon-button routerLink="/clients" matTooltip="Voltar para a lista">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="title-section">
+        <div class="title-row">
+          <h1>{{ client.name }}</h1>
+          <span class="status-badge" [ngClass]="client.active ? 'active' : 'inactive'">
+            {{ client.active ? 'Ativo' : 'Inativo' }}
+          </span>
+        </div>
+        <p class="subtitle">{{ client.companyName || 'Sem Empresa' }} • {{ client.industry || 'Sem Setor' }}</p>
+      </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <mat-icon class="stat-icon">monetization_on</mat-icon>
+        <div class="stat-details">
+          <span class="stat-label">Valor Total de Negócios</span>
+          <span class="stat-val">{{ formatCurrency(getTotalDealsValue()) }}</span>
+        </div>
+      </div>
+      <div class="stat-card orange">
+        <mat-icon class="stat-icon">assignment_late</mat-icon>
+        <div class="stat-details">
+          <span class="stat-label">Tarefas Pendentes</span>
+          <span class="stat-val">{{ getOpenTasksCount() }}</span>
+        </div>
+      </div>
+      <div class="stat-card purple">
+        <mat-icon class="stat-icon">attach_file</mat-icon>
+        <div class="stat-details">
+          <span class="stat-label">Arquivos Anexados</span>
+          <span class="stat-val">{{ attachments.length }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <mat-tab-group animationDuration="400ms" class="client-tabs">
+    
+    <!-- Tab 1: Dados Cadastrais -->
+    <mat-tab label="Dados Cadastrais">
+      <mat-card class="tab-card glass-panel">
+        <mat-card-header class="tab-card-header">
+          <mat-card-title>Ficha Cadastral</mat-card-title>
+          <div class="header-actions">
+            @if (!editMode) {
+              <button mat-raised-button color="primary" (click)="toggleEditMode()">
+                <mat-icon>edit</mat-icon> Editar
+              </button>
+            } @else {
+              <button mat-button (click)="toggleEditMode()" [disabled]="saving">Cancelar</button>
+              <button mat-raised-button color="accent" (click)="saveClientDetails()" [disabled]="saving">
+                <mat-icon>{{ saving ? 'sync' : 'save' }}</mat-icon> {{ saving ? 'Salvando...' : 'Salvar' }}
+              </button>
+            }
+          </div>
+        </mat-card-header>
+
+        <mat-card-content class="tab-card-content">
+          <form [formGroup]="clientForm" class="client-form-grid">
+            <div class="form-section">
+              <h3>Informações de Contato</h3>
+              <div class="input-row">
+                <mat-form-field appearance="outline" class="flex-2">
+                  <mat-label>Nome</mat-label>
+                  <input matInput formControlName="name" [readonly]="!editMode">
+                  <mat-error *ngIf="clientForm.get('name')?.hasError('required')">Nome é obrigatório</mat-error>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-2">
+                  <mat-label>E-mail</mat-label>
+                  <input matInput type="email" formControlName="email" [readonly]="!editMode">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>Telefone</mat-label>
+                  <input matInput formControlName="phone" [readonly]="!editMode">
+                </mat-form-field>
+              </div>
+
+              <div class="input-row">
+                <mat-form-field appearance="outline" class="flex-2">
+                  <mat-label>Empresa</mat-label>
+                  <input matInput formControlName="companyName" [readonly]="!editMode">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>CPF / CNPJ</mat-label>
+                  <input matInput formControlName="taxId" [readonly]="!editMode">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-2">
+                  <mat-label>Website</mat-label>
+                  <input matInput formControlName="website" [readonly]="!editMode">
+                </mat-form-field>
+              </div>
+
+              <div class="input-row">
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>Setor / Indústria</mat-label>
+                  <input matInput formControlName="industry" [readonly]="!editMode">
+                </mat-form-field>
+                <div class="toggle-container flex-1">
+                  <mat-slide-toggle formControlName="active" color="primary">
+                    Cadastro Ativo
+                  </mat-slide-toggle>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Endereço</h3>
+              <div class="input-row">
+                <mat-form-field appearance="outline" class="flex-3">
+                  <mat-label>Endereço Completo</mat-label>
+                  <input matInput formControlName="address" [readonly]="!editMode">
+                </mat-form-field>
+              </div>
+              <div class="input-row">
+                <mat-form-field appearance="outline" class="flex-2">
+                  <mat-label>Cidade</mat-label>
+                  <input matInput formControlName="city" [readonly]="!editMode">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>Estado</mat-label>
+                  <input matInput formControlName="state" [readonly]="!editMode">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>CEP</mat-label>
+                  <input matInput formControlName="zipCode" [readonly]="!editMode">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="flex-1">
+                  <mat-label>País</mat-label>
+                  <input matInput formControlName="country" [readonly]="!editMode">
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="form-section full-width">
+              <h3>Notas Internas</h3>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Notas e Observações</mat-label>
+                <textarea matInput rows="4" formControlName="notes" [readonly]="!editMode"></textarea>
+              </mat-form-field>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+
+    <!-- Tab 2: Linha do Tempo / Histórico -->
+    <mat-tab label="Histórico & Interações">
+      <div style="padding:0 8px;">
+        <app-timeline
+          entityType="clients"
+          [entityId]="clientId">
+        </app-timeline>
+      </div>
+    </mat-tab>
+
+    <!-- Tab 3: Arquivos & Anexos -->
+    <mat-tab label="Arquivos & Anexos">
+      <mat-card class="tab-card glass-panel">
+        <mat-card-header>
+          <mat-card-title>Arquivos do Cliente</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="tab-card-content attachments-section">
+          <!-- Upload Box -->
+          <div class="upload-dropzone">
+            <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none;">
+            <div class="dropzone-content" (click)="fileInput.click()">
+              <mat-icon class="cloud-icon">cloud_upload</mat-icon>
+              <p class="dropzone-title">Arraste arquivos ou clique para fazer upload</p>
+              <p class="dropzone-subtitle">Formatos aceitos: PDF, Imagens, Documentos (Máx 20MB)</p>
+              @if (uploadingFile) {
+                <div class="uploader-spinner">
+                  <mat-spinner diameter="30"></mat-spinner>
+                  <span>Enviando arquivo...</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Attachments List -->
+          <div class="attachments-list">
+            <h3>Documentos Anexados</h3>
+            @if (attachments.length === 0) {
+              <div class="empty-state">
+                <mat-icon class="empty-icon">folder_open</mat-icon>
+                <p>Nenhum arquivo anexado a este cliente.</p>
+              </div>
+            } @else {
+              <div class="attachment-grid">
+                <div class="attachment-item-card" *ngFor="let att of attachments">
+                  <div class="attachment-icon-box">
+                    <mat-icon class="file-type-icon">insert_drive_file</mat-icon>
+                  </div>
+                  <div class="attachment-info">
+                    <h4 class="filename" [matTooltip]="att.fileName">{{ att.fileName }}</h4>
+                    <p class="filesize">{{ formatBytes(att.fileSize) }} • por {{ att.userName }}</p>
+                    <p class="upload-date">Enviado em: {{ formatDate(att.createdAt) }}</p>
+                  </div>
+                  <div class="attachment-actions">
+                    <button mat-icon-button color="primary" matTooltip="Baixar Arquivo" (click)="downloadAttachment(att)">
+                      <mat-icon>download</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" matTooltip="Excluir Arquivo" (click)="deleteAttachment(att.id!)">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+
+    <!-- Tab 4: Oportunidades & Tarefas -->
+    <mat-tab label="Oportunidades & Tarefas">
+      <div class="related-container">
+        
+        <!-- Deals Section -->
+        <mat-card class="related-card glass-panel">
+          <div class="related-header">
+            <h3>Negócios / Oportunidades</h3>
+            <button mat-flat-button color="primary" (click)="openCreateDealDialog()">
+              <mat-icon>add</mat-icon> Novo Negócio
+            </button>
+          </div>
+          <mat-card-content>
+            @if (deals.length === 0) {
+              <div class="empty-state">
+                <mat-icon class="empty-icon">handshake</mat-icon>
+                <p>Nenhum negócio associado a este cliente.</p>
+              </div>
+            } @else {
+              <table mat-table [dataSource]="deals" class="related-table">
+                <ng-container matColumnDef="title">
+                  <th mat-header-cell *matHeaderCellDef>Título</th>
+                  <td mat-cell *matCellDef="let row"><strong>{{ row.title }}</strong></td>
+                </ng-container>
+                <ng-container matColumnDef="value">
+                  <th mat-header-cell *matHeaderCellDef>Valor</th>
+                  <td mat-cell *matCellDef="let row" class="value-cell">{{ formatCurrency(row.value) }}</td>
+                </ng-container>
+                <ng-container matColumnDef="stageName">
+                  <th mat-header-cell *matHeaderCellDef>Etapa</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span class="stage-tag">{{ row.stageName || 'Sem Etapa' }}</span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="createdAt">
+                  <th mat-header-cell *matHeaderCellDef>Criado Em</th>
+                  <td mat-cell *matCellDef="let row">{{ formatDate(row.createdAt) }}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="dealColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: dealColumns;"></tr>
+              </table>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Tasks Section -->
+        <mat-card class="related-card glass-panel">
+          <div class="related-header">
+            <h3>Tarefas Vinculadas</h3>
+            <button mat-flat-button color="primary" (click)="openCreateTaskDialog()">
+              <mat-icon>add</mat-icon> Nova Tarefa
+            </button>
+          </div>
+          <mat-card-content>
+            @if (tasks.length === 0) {
+              <div class="empty-state">
+                <mat-icon class="empty-icon">task_alt</mat-icon>
+                <p>Nenhuma tarefa vinculada a este cliente.</p>
+              </div>
+            } @else {
+              <table mat-table [dataSource]="tasks" class="related-table">
+                <ng-container matColumnDef="title">
+                  <th mat-header-cell *matHeaderCellDef>Título</th>
+                  <td mat-cell *matCellDef="let row">{{ row.title }}</td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Status</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span class="status-tag" [ngClass]="row.status?.toLowerCase()">
+                      {{ row.status === 'COMPLETED' ? 'Concluída' : 'Pendente' }}
+                    </span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="priority">
+                  <th mat-header-cell *matHeaderCellDef>Prioridade</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span class="priority-tag" [ngClass]="row.priority?.toLowerCase()">
+                      {{ row.priority || 'Normal' }}
+                    </span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="dueDate">
+                  <th mat-header-cell *matHeaderCellDef>Prazo</th>
+                  <td mat-cell *matCellDef="let row">{{ formatDate(row.dueDate) }}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="taskColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: taskColumns;"></tr>
+              </table>
+            }
+          </mat-card-content>
+        </mat-card>
+
+      </div>
+    </mat-tab>
+
+    <!-- Tab 5: Propostas & Projetos -->
+    <mat-tab label="Propostas & Projetos">
+      <div class="related-container">
+        
+        <!-- Proposals Section -->
+        <mat-card class="related-card glass-panel">
+          <div class="related-header">
+            <h3>Propostas Comerciais</h3>
+            <button mat-flat-button color="primary" (click)="openCreateProposalDialog()">
+              <mat-icon>add</mat-icon> Nova Proposta
+            </button>
+          </div>
+          <mat-card-content>
+            @if (proposals.length === 0) {
+              <div class="empty-state">
+                <mat-icon class="empty-icon">description</mat-icon>
+                <p>Nenhuma proposta associada a este cliente.</p>
+              </div>
+            } @else {
+              <table mat-table [dataSource]="proposals" class="related-table">
+                <ng-container matColumnDef="title">
+                  <th mat-header-cell *matHeaderCellDef>Título</th>
+                  <td mat-cell *matCellDef="let row"><strong>{{ row.title }}</strong></td>
+                </ng-container>
+                <ng-container matColumnDef="totalAmount">
+                  <th mat-header-cell *matHeaderCellDef>Valor Total</th>
+                  <td mat-cell *matCellDef="let row" class="value-cell">{{ formatCurrency(row.totalAmount) }}</td>
+                </ng-container>
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Status</th>
+                  <td mat-cell *matCellDef="let row">
+                    <span class="status-tag" [ngClass]="row.status?.toLowerCase()">
+                      {{ row.status || 'Rascunho' }}
+                    </span>
+                  </td>
+                </ng-container>
+                <ng-container matColumnDef="validUntil">
+                  <th mat-header-cell *matHeaderCellDef>Validade</th>
+                  <td mat-cell *matCellDef="let row">{{ formatDate(row.validUntil) }}</td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="proposalColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: proposalColumns;"></tr>
+              </table>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Projects Section -->
+        <mat-card class="related-card glass-panel">
+          <div class="related-header">
+            <h3>Projetos</h3>
+            <button mat-flat-button color="primary" (click)="openCreateProjectDialog()">
+              <mat-icon>add</mat-icon> Novo Projeto
+            </button>
+          </div>
+          <mat-card-content>
+            @if (projects.length === 0) {
+              <div class="empty-state">
+                <mat-icon class="empty-icon">folder</mat-icon>
+                <p>Nenhum projeto associado a este cliente.</p>
+              </div>
+            } @else {
+              <!-- Folder Grid Layout -->
+              <div class="folder-grid">
+                <div class="folder-card" *ngFor="let row of projects">
+                  <div class="folder-header">
+                    <mat-icon class="folder-icon">folder</mat-icon>
+                    <span class="status-tag" [ngClass]="row.status?.toLowerCase()">
+                      {{ row.status || 'Planejamento' }}
+                    </span>
+                  </div>
+                  <div class="folder-body">
+                    <h4 class="folder-title">{{ row.name }}</h4>
+                    <p class="folder-description" *ngIf="row.description">{{ row.description }}</p>
+                  </div>
+                  <div class="folder-footer">
+                    <span class="folder-budget">
+                      <mat-icon>payments</mat-icon>
+                      {{ formatCurrency(row.budget) }}
+                    </span>
+                    <span class="folder-date" *ngIf="row.endDate">
+                      <mat-icon>calendar_today</mat-icon>
+                      {{ formatDate(row.endDate).split(' ')[0] }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+</div>
+
+<!-- Loading Template -->
+<ng-template #loadingSpinner>
+  <div class="loading-container">
+    <mat-spinner diameter="60"></mat-spinner>
+    <p>Carregando perfil do cliente...</p>
+  </div>
+</ng-template>

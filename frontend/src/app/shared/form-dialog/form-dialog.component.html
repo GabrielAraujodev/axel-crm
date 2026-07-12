@@ -1,0 +1,55 @@
+<h2 mat-dialog-title>{{ title }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="dialog-form">
+    @for (field of fields; track field.key) {
+      @switch (field.type) {
+        @case ('select') {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ field.label }}</mat-label>
+            <mat-select [formControlName]="field.key">
+              @for (opt of field.options; track opt.value) {
+                <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
+        @case ('textarea') {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ field.label }}</mat-label>
+            <textarea matInput [formControlName]="field.key" rows="3"></textarea>
+            <button mat-icon-button matSuffix type="button" matTooltip="Gerar com IA Gemini" (click)="generateAI(field.key)">
+              <mat-icon style="color: #6366f1;">psychology</mat-icon>
+            </button>
+          </mat-form-field>
+        }
+        @case ('date') {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ field.label }}</mat-label>
+            <input matInput [matDatepicker]="dp" [formControlName]="field.key" />
+            <mat-datepicker-toggle matSuffix [for]="dp"></mat-datepicker-toggle>
+            <mat-datepicker #dp></mat-datepicker>
+          </mat-form-field>
+        }
+        @case ('checkbox') {
+          <mat-checkbox [formControlName]="field.key" class="full-width checkbox-field">
+            {{ field.label }}
+          </mat-checkbox>
+        }
+        @default {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ field.label }}</mat-label>
+            <input matInput [formControlName]="field.key" [type]="field.type" />
+          </mat-form-field>
+        }
+      }
+    }
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="submit()" [disabled]="form.invalid || saving">
+    <mat-icon>{{ saving ? 'sync' : (isEdit ? 'save' : 'add') }}</mat-icon> {{ saving ? 'Salvando...' : (isEdit ? 'Salvar' : 'Criar') }}
+  </button>
+</mat-dialog-actions>

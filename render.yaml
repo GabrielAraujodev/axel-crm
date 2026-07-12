@@ -1,0 +1,52 @@
+databases:
+  - name: axel-crm-db
+    databaseName: axelcrm
+    plan: free
+
+services:
+  # ─── Backend: Spring Boot API ───────────────────────────────────
+  - type: web
+    name: axel-crm-api
+    runtime: docker
+    repoRoot: backend
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+      - key: DB_HOST
+        fromDatabase:
+          name: axel-crm-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: axel-crm-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: axel-crm-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: axel-crm-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: axel-crm-db
+          property: password
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRATION
+        value: "86400000"
+
+  # ─── Frontend: Angular Static Site ─────────────────────────────
+  - type: static
+    name: axel-crm-app
+    repoRoot: frontend
+    plan: free
+    buildCommand: npm ci && sed -i "s|__API_URL__|$API_URL|g" src/environments/environment.ts && npm run build -- --configuration production
+    publishPath: dist/crm-axel-frontend/browser
+    envVars:
+      - key: API_URL
+        value: https://axel-crm-api.onrender.com/api/v1
+      - key: NG_ENV
+        value: production

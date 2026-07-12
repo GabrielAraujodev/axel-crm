@@ -1,0 +1,40 @@
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 420px;
+  padding-top: 16px;
+  box-sizing: border-box;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.checkbox-field {
+  margin-top: 4px;
+  margin-bottom: 8px;
+  color: var(--body);
+}
+
+::ng-deep {
+  .mat-mdc-dialog-actions {
+    padding: 16px 24px !important;
+    border-top: 1px solid var(--hairline);
+    margin-bottom: 0;
+    gap: 8px;
+  }
+
+  .mat-mdc-dialog-content {
+    padding: 16px 24px !important;
+  }
+
+  .mat-mdc-dialog-title {
+    padding: 20px 24px !important;
+    margin: 0 !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    border-bottom: 1px solid var(--hairline);
+    color: var(--ink);
+  }
+}

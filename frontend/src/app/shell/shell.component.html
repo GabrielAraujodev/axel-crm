@@ -1,0 +1,121 @@
+<mat-sidenav-container class="shell-container">
+  <!-- Sidenav -->
+  <mat-sidenav
+    #sidenav
+    [mode]="isMobile ? 'over' : 'side'"
+    [opened]="sidenavOpened"
+    class="shell-sidenav"
+  >
+    <div class="sidenav-header">
+      <mat-icon class="logo-icon" aria-label="AXEL CRM">hub</mat-icon>
+      <span class="logo-text">AXEL CRM</span>
+    </div>
+
+    <mat-nav-list>
+      <!-- Dashboard item (standalone) -->
+      @for (item of navItems; track item.route) {
+        <a
+          mat-list-item
+          [routerLink]="item.route"
+          routerLinkActive="active-link"
+          (click)="isMobile && sidenav.close()"
+        >
+          <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+          <span matListItemTitle>{{ item.label }}</span>
+        </a>
+      }
+
+      <!-- Grouped nav sections -->
+      @for (section of navSections; track section.label) {
+        <div class="nav-section-label">{{ section.label }}</div>
+        @for (item of section.items; track item.route) {
+          <a
+            mat-list-item
+            [routerLink]="item.route"
+            routerLinkActive="active-link"
+            (click)="isMobile && sidenav.close()"
+          >
+            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+            <span matListItemTitle>{{ item.label }}</span>
+          </a>
+        }
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <!-- Main content -->
+  <mat-sidenav-content>
+    <mat-toolbar color="primary" class="shell-toolbar">
+      <button mat-icon-button (click)="toggleSidenav()" aria-label="Abrir menu">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <span class="toolbar-spacer"></span>
+
+      <!-- Theme Toggle -->
+      <button mat-icon-button (click)="toggleTheme()" [attr.aria-label]="isDarkTheme ? 'Modo claro' : 'Modo escuro'">
+        <mat-icon>{{ isDarkTheme ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+
+      <!-- Notification Bell -->
+      <button mat-icon-button [matMenuTriggerFor]="notificationsMenu" class="mr-2" aria-label="Notificações">
+        <mat-icon [matBadge]="unreadCount" matBadgeColor="warn" [matBadgeHidden]="unreadCount === 0">notifications</mat-icon>
+      </button>
+
+      <mat-menu #notificationsMenu="matMenu" class="notifications-menu-panel">
+        <div class="notifications-header" (click)="$event.stopPropagation()">
+          <span class="notifications-title">Notificações</span>
+          <button mat-button color="primary" class="mark-all-btn" (click)="markAllAsRead()">Marcar todas como lidas</button>
+        </div>
+        <div class="notifications-list-container" (click)="$event.stopPropagation()">
+          @if (notifications.length === 0) {
+            <div class="no-notifications">Nenhuma notificação encontrada.</div>
+          } @else {
+            @for (notification of notifications; track notification.id) {
+              <div class="notification-item" [ngClass]="{'unread-item': !notification.read}" (click)="markAsRead(notification)">
+                <mat-icon class="notification-icon">{{ notification.type === 'warning' ? 'warning_amber' : notification.type === 'success' ? 'check_circle' : notification.type === 'error' ? 'error' : 'info' }}</mat-icon>
+                <div class="notification-body">
+                  <span class="notification-subject">{{ notification.title }}</span>
+                  <span class="notification-message">{{ notification.message }}</span>
+                  <span class="notification-date">{{ notification.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </mat-menu>
+
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="Menu do usuário">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+
+      <mat-menu #userMenu="matMenu">
+        <div class="user-menu-header" mat-menu-item disabled>
+          <mat-icon>person</mat-icon>
+          <span>{{ userName }}</span>
+        </div>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Sair</span>
+        </button>
+      </mat-menu>
+    </mat-toolbar>
+
+    <div class="shell-content">
+      @if (breadcrumbs.length > 0) {
+        <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+          @for (crumb of breadcrumbs; track crumb.route; let last = $last) {
+            @if (!last) {
+              <a [routerLink]="crumb.route" class="breadcrumb-link">{{ crumb.label }}</a>
+              <mat-icon class="breadcrumb-sep">chevron_right</mat-icon>
+            } @else {
+              <span class="breadcrumb-current">{{ crumb.label }}</span>
+            }
+          }
+        </nav>
+      }
+      <router-outlet></router-outlet>
+    </div>
+    <app-global-timer></app-global-timer>
+  </mat-sidenav-content>
+</mat-sidenav-container>

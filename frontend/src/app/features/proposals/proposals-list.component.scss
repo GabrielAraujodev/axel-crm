@@ -1,0 +1,28 @@
+.list-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+}
+
+.page-title {
+  font-family: 'Outfit', sans-serif;
+  color: var(--ink);
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+}
+
+th.mat-mdc-header-cell {
+  background-color: var(--bg-elevated) !important;
+  color: var(--muted) !important;
+  font-weight: 600 !important;
+}
+
+tr.mat-mdc-row:hover {
+  background-color: rgba(50, 50, 50, 0.5) !important;
+}

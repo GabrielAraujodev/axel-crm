@@ -1,0 +1,120 @@
+<div class="list-page p-6">
+  <div class="list-header flex justify-between items-center mb-6">
+    <h1 class="page-title text-2xl font-bold text-[#00072d]">Propostas Comerciais</h1>
+    <button mat-raised-button color="primary" class="rounded-xl font-semibold" (click)="openDialog()">
+      <mat-icon>add</mat-icon>
+      Nova Proposta
+    </button>
+  </div>
+
+  @if (loading) {
+    <div class="loading-container flex justify-center py-20">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else {
+    <div class="table-container bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+      <table mat-table [dataSource]="items" matSort (matSortChange)="onSort($event)" class="w-full">
+        
+        <!-- Código Column -->
+        <ng-container matColumnDef="proposalCode">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="py-4 px-6 text-gray-500 font-semibold text-xs uppercase">Código</th>
+          <td mat-cell *matCellDef="let row" class="py-4 px-6 font-semibold text-blue-600 text-sm">
+            {{ row.proposalCode || 'N/A' }}
+          </td>
+        </ng-container>
+
+        <!-- Título Column -->
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="py-4 px-6 text-gray-500 font-semibold text-xs uppercase">Título</th>
+          <td mat-cell *matCellDef="let row" class="py-4 px-6 font-medium text-gray-900 text-sm">{{ row.title }}</td>
+        </ng-container>
+
+        <!-- Cliente Column -->
+        <ng-container matColumnDef="clientName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="py-4 px-6 text-gray-500 font-semibold text-xs uppercase">Cliente</th>
+          <td mat-cell *matCellDef="let row" class="py-4 px-6 text-gray-600 text-sm">{{ row.clientName }}</td>
+        </ng-container>
+
+        <!-- Valor Column -->
+        <ng-container matColumnDef="totalAmount">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="py-4 px-6 text-gray-500 font-semibold text-xs uppercase">Valor Total</th>
+          <td mat-cell *matCellDef="let row" class="py-4 px-6 text-gray-900 font-semibold text-sm">
+            {{ formatCurrency(row.totalAmount) }}
+          </td>
+        </ng-container>
+
+        <!-- Validade Column -->
+        <ng-container matColumnDef="validUntil">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="py-4 px-6 text-gray-500 font-semibold text-xs uppercase">Válida Até</th>
+          <td mat-cell *matCellDef="let row" class="py-4 px-6 text-gray-500 text-sm">
+            {{ row.validUntil | date:'dd/MM/yyyy' || 'N/A' }}
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="py-4 px-6 text-gray-500 font-semibold text-xs uppercase">Status</th>
+          <td mat-cell *matCellDef="let row" class="py-4 px-6 text-sm">
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold"
+              [ngClass]="{
+                'bg-green-100 text-green-700': row.status === 'ACCEPTED',
+                'bg-blue-100 text-blue-700': row.status === 'SENT',
+                'bg-gray-100 text-gray-600': row.status === 'DRAFT',
+                'bg-yellow-100 text-yellow-700': row.status === 'NEGOTIATING' || row.status === 'VIEWED',
+                'bg-red-100 text-red-700': row.status === 'REJECTED' || row.status === 'EXPIRED'
+              }">
+              {{ translateStatus(row.status) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="py-4 px-6 text-gray-500 font-semibold text-xs uppercase text-right">Ações</th>
+          <td mat-cell *matCellDef="let row" class="py-4 px-6 text-right space-x-1">
+            
+            <!-- Copiar Link Público -->
+            <button mat-icon-button matTooltip="Copiar Link Público" (click)="copyPublicLink(row)">
+              <mat-icon class="text-blue-500 scale-90">link</mat-icon>
+            </button>
+
+            <!-- Baixar PDF -->
+            <button mat-icon-button matTooltip="Baixar PDF" (click)="downloadPdf(row)">
+              <mat-icon class="text-red-500 scale-90">picture_as_pdf</mat-icon>
+            </button>
+
+            <!-- Converter em Projeto -->
+            @if (row.status === 'ACCEPTED') {
+              <button mat-icon-button matTooltip="Converter em Projeto" (click)="convertToProject(row)">
+                <mat-icon class="text-emerald-500 scale-90">play_circle_outline</mat-icon>
+              </button>
+            }
+
+            <!-- Editar -->
+            <button mat-icon-button matTooltip="Editar" (click)="openDialog(row)">
+              <mat-icon class="text-amber-500 scale-90">edit</mat-icon>
+            </button>
+
+            <!-- Excluir -->
+            <button mat-icon-button matTooltip="Excluir" (click)="onDelete(row)">
+              <mat-icon class="text-red-500 scale-90">delete</mat-icon>
+            </button>
+
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="bg-gray-50/50"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-gray-50/30 transition-colors border-b border-gray-100"></tr>
+      </table>
+    </div>
+
+    <mat-paginator
+      [length]="totalElements"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[5, 10, 25, 50]"
+      (page)="onPage($event)"
+      showFirstLastButtons
+      class="mt-4"
+    ></mat-paginator>
+  }
+</div>

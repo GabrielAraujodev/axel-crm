@@ -1,0 +1,119 @@
+<div class="reports-container">
+  <!-- Title and Header -->
+  <div class="header-section">
+    <div class="title-area">
+      <h1>Relatórios Financeiros</h1>
+      <p>Acompanhe a saúde financeira da sua organização através do DRE e DFC</p>
+    </div>
+  </div>
+
+  <!-- Filters Panel -->
+  <div class="filters-card glass-panel">
+    <div class="filter-row">
+      <div class="form-group">
+        <label for="startDate">Data Início</label>
+        <input type="date" id="startDate" [(ngModel)]="startDate" class="date-input" />
+      </div>
+
+      <div class="form-group">
+        <label for="endDate">Data Fim</label>
+        <input type="date" id="endDate" [(ngModel)]="endDate" class="date-input" />
+      </div>
+
+      <div class="form-group">
+        <label>Tipo de Relatório</label>
+        <div class="tab-toggle">
+          <button [class.active]="reportType === 'DRE'" (click)="setReportType('DRE')">DRE (Competência)</button>
+          <button [class.active]="reportType === 'DFC'" (click)="setReportType('DFC')">DFC (Caixa)</button>
+        </div>
+      </div>
+
+      <button mat-flat-button color="primary" class="btn-generate" (click)="generate()" [disabled]="loading">
+        <mat-icon *ngIf="!loading">analytics</mat-icon>
+        <mat-spinner *ngIf="loading" diameter="20" class="btn-spinner"></mat-spinner>
+        Gerar Relatório
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-grid" *ngIf="data && !loading">
+    <!-- Revenues Summary -->
+    <div class="summary-card revenue-card glass-panel">
+      <div class="card-icon"><mat-icon>trending_up</mat-icon></div>
+      <div class="card-info">
+        <h3>Receitas Totais</h3>
+        <p class="value">{{ data.totalRevenues | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</p>
+      </div>
+    </div>
+
+    <!-- Expenses Summary -->
+    <div class="summary-card expense-card glass-panel">
+      <div class="card-icon"><mat-icon>trending_down</mat-icon></div>
+      <div class="card-info">
+        <h3>Despesas Totais</h3>
+        <p class="value">{{ data.totalExpenses | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</p>
+      </div>
+    </div>
+
+    <!-- Net Result Summary -->
+    <div class="summary-card result-card glass-panel" [ngClass]="data.netResult >= 0 ? 'positive-result' : 'negative-result'">
+      <div class="card-icon">
+        <mat-icon>{{ data.netResult >= 0 ? 'check_circle' : 'warning' }}</mat-icon>
+      </div>
+      <div class="card-info">
+        <h3>Resultado Líquido</h3>
+        <p class="value">{{ data.netResult | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tables Section -->
+  <div class="tables-section" *ngIf="data && !loading">
+    <div class="report-block glass-panel">
+      <h2>1. Receitas</h2>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Conta Contábil</th>
+            <th class="amount-header">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of data.revenues">
+            <td class="code-col">{{ item.accountCode }}</td>
+            <td class="name-col">{{ item.accountName }}</td>
+            <td class="amount-col positive">{{ item.total | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
+          </tr>
+          <tr *ngIf="data.revenues.length === 0">
+            <td colspan="3" class="empty-table">Nenhuma receita registrada neste período.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="report-block glass-panel">
+      <h2>2. Despesas</h2>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Conta Contábil</th>
+            <th class="amount-header">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of data.expenses">
+            <td class="code-col">{{ item.accountCode }}</td>
+            <td class="name-col">{{ item.accountName }}</td>
+            <td class="amount-col negative">{{ item.total | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</td>
+          </tr>
+          <tr *ngIf="data.expenses.length === 0">
+            <td colspan="3" class="empty-table">Nenhuma despesa registrada neste período.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,276 @@
+<div class="project-detail-container" *ngIf="project && !loading">
+  <!-- Top Action Bar -->
+  <div class="top-nav-bar">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon> Voltar para Projetos
+    </button>
+    <div class="action-buttons">
+      <button mat-flat-button color="primary" (click)="save()" [disabled]="saving">
+        <mat-icon *ngIf="!saving">save</mat-icon>
+        <mat-spinner *ngIf="saving" diameter="20" class="btn-spinner"></mat-spinner>
+        Salvar Alterações
+      </button>
+    </div>
+  </div>
+
+  <!-- Header Info -->
+  <div class="project-header glass-panel">
+    <div class="title-section">
+      <div class="status-badge" [attr.data-status]="project.status">{{ project.status }}</div>
+      <h1>{{ project.name }}</h1>
+      <p class="description">{{ project.description || 'Sem descrição cadastrada' }}</p>
+    </div>
+    <div class="quick-stats">
+      <div class="stat-item">
+        <span class="label">Orçamento</span>
+        <span class="value">{{ project.budget | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">Custo Atual</span>
+        <span class="value warning">{{ project.cost | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Tabs -->
+  <mat-tab-group class="project-tabs glass-panel">
+    <!-- Tab 1: Info & Equipe -->
+    <mat-tab label="Equipe & Geral">
+      <div class="tab-content">
+        <div class="grid-layout">
+          <!-- General Details Form -->
+          <div class="form-block">
+            <h3>Dados Gerais do Projeto</h3>
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Nome do Projeto</mat-label>
+                <input matInput [(ngModel)]="project.name" required />
+              </mat-form-field>
+            </div>
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Descrição</mat-label>
+                <textarea matInput rows="3" [(ngModel)]="project.description"></textarea>
+              </mat-form-field>
+            </div>
+            <div class="form-row double">
+              <mat-form-field appearance="outline">
+                <mat-label>Data Início</mat-label>
+                <input matInput type="date" [(ngModel)]="project.startDate" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Data Fim</mat-label>
+                <input matInput type="date" [(ngModel)]="project.endDate" />
+              </mat-form-field>
+            </div>
+            <div class="form-row double">
+              <mat-form-field appearance="outline">
+                <mat-label>Orçamento (R$)</mat-label>
+                <input matInput type="number" [(ngModel)]="project.budget" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Custo (R$)</mat-label>
+                <input matInput type="number" [(ngModel)]="project.cost" />
+              </mat-form-field>
+            </div>
+            <div class="form-row double">
+              <mat-form-field appearance="outline">
+                <mat-label>Cliente</mat-label>
+                <mat-select [(ngModel)]="project.clientId">
+                  <mat-option *ngFor="let c of clients" [value]="c.id">{{ c.name }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Status</mat-label>
+                <mat-select [(ngModel)]="project.status">
+                  <mat-option value="PLANEJAMENTO">Planejamento</mat-option>
+                  <mat-option value="EM_ANDAMENTO">Em Andamento</mat-option>
+                  <mat-option value="SUSPENSO">Suspenso</mat-option>
+                  <mat-option value="CONCLUIDO">Concluído</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <!-- Team Details -->
+          <div class="team-block">
+            <h3>Membros da Equipe</h3>
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Gerente de Projeto Responsável</mat-label>
+              <mat-select [(ngModel)]="project.managerUserId">
+                <mat-option value="">Nenhum</mat-option>
+                <mat-option *ngFor="let u of users" [value]="u.id">{{ u.name }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <div class="team-list">
+              <div class="team-member-card" *ngIf="project.managerUserId">
+                <mat-icon class="member-avatar">account_circle</mat-icon>
+                <div class="member-info">
+                  <span class="member-name">{{ project.managerName || 'Gerente Definido' }}</span>
+                  <span class="member-role">Gerente de Projetos</span>
+                </div>
+              </div>
+              
+              <!-- Mock Collaborators -->
+              <div class="team-member-card">
+                <mat-icon class="member-avatar">engineering</mat-icon>
+                <div class="member-info">
+                  <span class="member-name">Rodrigo Silveira</span>
+                  <span class="member-role">Técnico Colaborador</span>
+                </div>
+              </div>
+              <div class="team-member-card">
+                <mat-icon class="member-avatar">science</mat-icon>
+                <div class="member-info">
+                  <span class="member-name">Dra. Amanda Souza</span>
+                  <span class="member-role">Assistente Técnica</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Tab 2: Perícias & Cálculos -->
+    <mat-tab label="Cálculos & Perícias">
+      <div class="tab-content">
+        <div class="grid-layout">
+          <!-- Legal Details Form -->
+          <div class="form-block">
+            <h3>Informações da Perícia Judicial</h3>
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Vincular Processo Judicial Existente</mat-label>
+                <mat-select [(ngModel)]="project.legalProcessId">
+                  <mat-option value="">Nenhum Processo</mat-option>
+                  <mat-option *ngFor="let p of processes" [value]="p.id">{{ p.cnjNumber }} - {{ p.court }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Número do Processo (CNJ)</mat-label>
+                <input matInput [(ngModel)]="project.cnjNumber" placeholder="0000000-00.0000.0.00.0000" />
+              </mat-form-field>
+            </div>
+
+            <div class="form-row double">
+              <mat-form-field appearance="outline">
+                <mat-label>Atuação (Tipo de Perícia)</mat-label>
+                <mat-select [(ngModel)]="project.expertType">
+                  <mat-option value="JUDICIAL">Perito Judicial</mat-option>
+                  <mat-option value="ASSISTANT">Assistente Técnico</mat-option>
+                  <mat-option value="PRIVATE">Laudo Particular</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Status do Pagamento</mat-label>
+                <mat-select [(ngModel)]="project.paymentStatus">
+                  <mat-option value="PENDING">Pendente</mat-option>
+                  <mat-option value="PARTIAL">Parcial</mat-option>
+                  <mat-option value="PAID">Totalmente Pago</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Prazo de Entrega do Laudo</mat-label>
+                <input matInput type="date" [(ngModel)]="project.deliveryDeadline" />
+              </mat-form-field>
+            </div>
+          </div>
+
+          <!-- Mock Calculations summary -->
+          <div class="calculations-block">
+            <h3>Resumo de Honorários e Custos</h3>
+            <div class="calculation-summary-card">
+              <div class="calc-row">
+                <span>Honorários Propostos:</span>
+                <span class="value">{{ project.budget | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+              </div>
+              <div class="calc-row">
+                <span>Impostos e Custas (Média 15%):</span>
+                <span class="value expense">- {{ (project.budget * 0.15) | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+              </div>
+              <div class="calc-row">
+                <span>Despesas do Projeto:</span>
+                <span class="value expense">- {{ project.cost | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+              </div>
+              <div class="divider"></div>
+              <div class="calc-row total">
+                <span>Honorários Líquidos Estimados:</span>
+                <span class="value positive">{{ (project.budget - (project.budget * 0.15) - project.cost) | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</span>
+              </div>
+            </div>
+            
+            <div class="alert-info-box">
+              <mat-icon>info</mat-icon>
+              <p>Os cálculos de honorários líquidos servem para estimativa e auxílio em tomadas de decisões.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Tab 3: Timeline Updates -->
+    <mat-tab label="Atualizações">
+      <div class="tab-content">
+        <app-timeline
+          entityType="projects"
+          [entityId]="projectId">
+        </app-timeline>
+      </div>
+    </mat-tab>
+
+    <!-- Tab 4: Relatórios / Documentos -->
+    <mat-tab label="Relatórios & Arquivos">
+      <div class="tab-content">
+        <div class="files-header">
+          <h3>Documentos Anexados</h3>
+          <button mat-stroked-button color="primary">
+            <mat-icon>upload_file</mat-icon> Enviar Documento
+          </button>
+        </div>
+
+        <div class="files-grid">
+          <div class="file-card">
+            <mat-icon class="file-icon text-red">picture_as_pdf</mat-icon>
+            <div class="file-info">
+              <span class="file-name">Petiçao_Inicial_Assinada.pdf</span>
+              <span class="file-size">1.4 MB · Rodrigo Silveira</span>
+            </div>
+            <button mat-icon-button><mat-icon>download</mat-icon></button>
+          </div>
+
+          <div class="file-card">
+            <mat-icon class="file-icon text-blue">description</mat-icon>
+            <div class="file-info">
+              <span class="file-name">Laudo_Preliminar_Pericia.docx</span>
+              <span class="file-size">420 KB · Dra. Amanda Souza</span>
+            </div>
+            <button mat-icon-button><mat-icon>download</mat-icon></button>
+          </div>
+
+          <div class="file-card">
+            <mat-icon class="file-icon text-green">table_chart</mat-icon>
+            <div class="file-info">
+              <span class="file-name">Planilha_Calculo_Liquidaçao.xlsx</span>
+              <span class="file-size">2.1 MB · Rodrigo Silveira</span>
+            </div>
+            <button mat-icon-button><mat-icon>download</mat-icon></button>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>
+
+<div class="loading-container" *ngIf="loading">
+  <mat-spinner diameter="50"></mat-spinner>
+  <p>Carregando informações do projeto...</p>
+</div>

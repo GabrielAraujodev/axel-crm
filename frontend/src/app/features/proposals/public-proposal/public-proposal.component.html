@@ -1,0 +1,148 @@
+<div class="public-proposal-container">
+  
+  @if (loading) {
+    <div class="loading-wrapper">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p class="mt-4 text-gray-500 font-medium">Carregando Proposta Comercial...</p>
+    </div>
+  } @else if (error || !proposal) {
+    <div class="error-wrapper">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <h2>Proposta Não Encontrada</h2>
+      <p>O link acessado é inválido ou a proposta foi expirada/removida.</p>
+    </div>
+  } @else {
+    <!-- TOP NAVBAR -->
+    <header class="proposal-header">
+      <div class="header-logo">
+        <mat-icon class="logo-icon">hub</mat-icon>
+        <span class="logo-text">AXEL CRM</span>
+      </div>
+      <button mat-raised-button color="primary" class="download-btn" (click)="downloadPdf()">
+        <mat-icon>picture_as_pdf</mat-icon>
+        Baixar PDF
+      </button>
+    </header>
+
+    <!-- CONTENT WRAPPER -->
+    <main class="proposal-content">
+      
+      <!-- HERO CARD -->
+      <div class="proposal-hero">
+        <div class="flex-1">
+          <span class="proposal-badge">{{ translateStatus(proposal.status) }}</span>
+          <h1 class="proposal-title">{{ proposal.title }}</h1>
+          <p class="proposal-code">Código: <strong>{{ proposal.proposalCode || 'N/A' }}</strong></p>
+        </div>
+        <div class="hero-dates">
+          <div class="date-item">
+            <span class="date-label">Emissão</span>
+            <span class="date-val">{{ proposal.issueDate | date:'dd/MM/yyyy' || 'N/A' }}</span>
+          </div>
+          <div class="date-item">
+            <span class="date-label">Validade</span>
+            <span class="date-val text-red-600 font-semibold">{{ proposal.validUntil | date:'dd/MM/yyyy' || 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN METADATA & SCOPE -->
+      <div class="grid-layout">
+        
+        <!-- Left: Scope & Description -->
+        <div class="card-section col-span-2">
+          <mat-card class="premium-card">
+            <h2 class="section-title"><mat-icon>description</mat-icon> Escopo & Descrição</h2>
+            <div class="scope-body">
+              {{ proposal.description || 'Nenhuma descrição detalhada fornecida.' }}
+            </div>
+          </mat-card>
+        </div>
+
+        <!-- Right: Client & Representative -->
+        <div class="card-section">
+          <mat-card class="premium-card">
+            <h2 class="section-title"><mat-icon>business</mat-icon> Informações do Cliente</h2>
+            <div class="meta-item">
+              <span class="meta-label">Razão Social / Nome</span>
+              <span class="meta-val">{{ proposal.client?.name || 'N/A' }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Empresa</span>
+              <span class="meta-val">{{ proposal.client?.companyName || 'N/A' }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Email</span>
+              <span class="meta-val">{{ proposal.client?.email || 'N/A' }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Telefone</span>
+              <span class="meta-val">{{ proposal.client?.phone || 'N/A' }}</span>
+            </div>
+            
+            <div class="border-t border-gray-100 my-4"></div>
+            
+            <h2 class="section-title"><mat-icon>person</mat-icon> Responsável Comercial</h2>
+            <div class="meta-item">
+              <span class="meta-label">Consultor</span>
+              <span class="meta-val">{{ proposal.assignedTo?.name || 'N/A' }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Contato</span>
+              <span class="meta-val">{{ proposal.assignedTo?.email || 'N/A' }}</span>
+            </div>
+          </mat-card>
+        </div>
+
+        <!-- Full: Items Table -->
+        <div class="card-section col-span-3">
+          <mat-card class="premium-card">
+            <h2 class="section-title"><mat-icon>shopping_cart</mat-icon> Itens da Proposta</h2>
+            
+            @if (!proposal.items || proposal.items.length === 0) {
+              <p class="p-4 text-gray-500 text-sm">Nenhum item adicionado a esta proposta.</p>
+            } @else {
+              <div class="overflow-x-auto">
+                <table class="items-table">
+                  <thead>
+                    <tr>
+                      <th class="text-left">Descrição do Serviço / Produto</th>
+                      <th class="text-center w-24">Quantidade</th>
+                      <th class="text-right w-40">Valor Unitário</th>
+                      <th class="text-right w-40">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of proposal.items; track item.id) {
+                      <tr>
+                        <td class="text-left font-medium text-gray-900">{{ item.description }}</td>
+                        <td class="text-center">{{ item.quantity }}</td>
+                        <td class="text-right">{{ formatCurrency(item.unitPrice) }}</td>
+                        <td class="text-right font-semibold text-gray-900">
+                          {{ formatCurrency(item.unitPrice * item.quantity - (item.discountAmount || 0)) }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+
+            <div class="summary-section">
+              <div class="summary-row">
+                <span>Descontos:</span>
+                <span class="text-red-500 font-semibold">- {{ formatCurrency(proposal.discountAmount || 0) }}</span>
+              </div>
+              <div class="summary-row total-row">
+                <span>Total Geral:</span>
+                <span>{{ formatCurrency(proposal.totalAmount || 0) }}</span>
+              </div>
+            </div>
+          </mat-card>
+        </div>
+
+      </div>
+
+    </main>
+  }
+</div>
