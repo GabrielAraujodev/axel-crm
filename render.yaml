@@ -8,7 +8,7 @@ services:
   - type: web
     name: axel-crm-api
     runtime: docker
-    repoRoot: backend
+    rootDir: backend
     plan: free
     envVars:
       - key: SPRING_PROFILES_ACTIVE
@@ -40,12 +40,12 @@ services:
 
   # ─── Frontend: Angular Static Site ─────────────────────────────
   - type: web
-    runtime: static
+    env: static
     name: axel-crm-app
-    repoRoot: frontend
+    rootDir: frontend
     plan: free
     buildCommand: npm ci && sed -i "s|__API_URL__|$API_URL|g" src/environments/environment.ts && npm run build -- --configuration production
-    publishPath: dist/crm-axel-frontend/browser
+    publishDir: dist/crm-axel-frontend/browser
     envVars:
       - key: API_URL
         value: https://axel-crm-api.onrender.com/api/v1
