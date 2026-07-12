@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.axelcrm.auth.service.AuthService;
+import com.axelcrm.commons.exception.BadRequestException;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -90,7 +91,7 @@ class AuthServiceTest {
         when(userRepository.findByEmailAndDeletedAtIsNull("existing@test.com"))
                 .thenReturn(Optional.of(new User()));
 
-        assertThrows(IllegalArgumentException.class, () -> authService.register(request));
+        assertThrows(BadRequestException.class, () -> authService.register(request));
         verify(organizationRepository, never()).save(any());
         verify(userRepository, never()).save(any());
     }
@@ -145,6 +146,6 @@ class AuthServiceTest {
         when(userRepository.findByEmailAndDeletedAtIsNull("john@test.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(rawPassword, "hashed")).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () -> authService.login(request));
+        assertThrows(BadRequestException.class, () -> authService.login(request));
     }
 }

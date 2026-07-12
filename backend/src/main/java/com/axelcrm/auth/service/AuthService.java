@@ -9,6 +9,7 @@ import com.axelcrm.auth.repository.UserRepository;
 import com.axelcrm.auth.security.JwtUtil;
 import com.axelcrm.commons.entity.Organization;
 import com.axelcrm.commons.entity.enums.Role;
+import com.axelcrm.commons.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,7 +28,7 @@ public class AuthService {
     @Transactional
     public LoginResponse register(RegisterRequest request) {
         if (userRepository.findByEmailAndDeletedAtIsNull(request.email()).isPresent()) {
-            throw new IllegalArgumentException("E-mail ja cadastrado");
+            throw new BadRequestException("E-mail ja cadastrado");
         }
 
         Organization org = new Organization();
@@ -65,7 +66,7 @@ public class AuthService {
         }
 
         if (!user.isActive()) {
-            throw new IllegalArgumentException("Usuario inativo");
+            throw new BadRequestException("Usuario inativo");
         }
 
         String token = jwtUtil.generateToken(user);
