@@ -39,8 +39,7 @@ services:
         value: "86400000"
 
   # ─── Frontend: Angular Static Site ─────────────────────────────
-  - type: web
-    env: static
+  - type: static
     name: axel-crm-app
     rootDir: frontend
     plan: free
