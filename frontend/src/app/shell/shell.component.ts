@@ -173,11 +173,59 @@ export class ShellComponent implements OnInit, OnDestroy {
     }));
   }
 
+  isTourActive = false;
+  tourCurrentIndex = 0;
+  tourPopoverTop = '0px';
+  tourPopoverLeft = '0px';
+  activeTourStep: any = {};
+
+  tourSteps = [
+    {
+      selector: '.sidenav-header',
+      title: 'Bem-vindo ao Axel CRM! 🚀',
+      description: 'Este é o seu novo painel de controle comercial e operacional. Vamos te apresentar as principais áreas do sistema.',
+      placement: 'right'
+    },
+    {
+      selector: 'mat-nav-list',
+      title: 'Menu de Módulos 🧭',
+      description: 'Aqui você acessa todos os recursos do sistema: Leads, Negócios, Propostas, Projetos, Financeiro, Comissões e Conformidade LGPD.',
+      placement: 'right'
+    },
+    {
+      selector: '.sidenav-toggle-btn',
+      title: 'Recolher Menu 🍔',
+      description: 'Clique aqui a qualquer momento para recolher a barra lateral e expandir sua área de trabalho.',
+      placement: 'bottom'
+    },
+    {
+      selector: '.notification-toggle-btn',
+      title: 'Central de Notificações 🔔',
+      description: 'Acompanhe alertas importantes, como novos leads recebidos, propostas aprovadas ou movimentações financeiras.',
+      placement: 'bottom'
+    },
+    {
+      selector: '.theme-toggle-btn',
+      title: 'Modo Escuro / Claro 🌓',
+      description: 'Alterne entre o tema escuro e claro de forma simples para melhor conforto visual.',
+      placement: 'bottom'
+    },
+    {
+      selector: '.user-toggle-btn',
+      title: 'Menu do Usuário 👤',
+      description: 'Acesse suas configurações de perfil, conta e saia do sistema com segurança.',
+      placement: 'bottom'
+    }
+  ];
+
   ngOnInit(): void {
     this.authService.user$.pipe(takeUntil(this.destroy$)).subscribe(u => {
       this.userName = u ? u.name : '';
       if (u) {
         this.startNotificationPolling();
+        if (!localStorage.getItem('systemOnboardingTourCompleted')) {
+          setTimeout(() => this.startTour(), 1500);
+        }
       } else {
         this.stopNotificationPolling();
       }
@@ -255,6 +303,96 @@ export class ShellComponent implements OnInit, OnDestroy {
   logout(): void {
     this.stopNotificationPolling();
     this.authService.logout();
+  }
+
+  startTour(): void {
+    this.isTourActive = true;
+    this.tourCurrentIndex = 0;
+    this.showTourStep(0);
+  }
+
+  showTourStep(index: number): void {
+    // Clear previous highlight
+    document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+
+    this.tourCurrentIndex = index;
+    this.activeTourStep = this.tourSteps[index];
+
+    setTimeout(() => {
+      const targetEl = document.querySelector(this.activeTourStep.selector);
+      if (!targetEl) {
+        console.warn(`Element ${this.activeTourStep.selector} not found for tour step`);
+        this.nextTourStep();
+        return;
+      }
+
+      // Add highlight class
+      targetEl.classList.add('tour-highlight');
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Calculate position
+      const rect = targetEl.getBoundingClientRect();
+      const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+
+      let top = 0;
+      let left = 0;
+
+      // Estimated popover size: 320px width, 180px height
+      const popoverWidth = 320;
+      const popoverHeight = 180;
+
+      if (this.activeTourStep.placement === 'bottom') {
+        top = rect.bottom + scrollY + 12;
+        left = rect.left + scrollX + (rect.width / 2) - (popoverWidth / 2);
+      } else if (this.activeTourStep.placement === 'top') {
+        top = rect.top + scrollY - popoverHeight - 12;
+        left = rect.left + scrollX + (rect.width / 2) - (popoverWidth / 2);
+      } else if (this.activeTourStep.placement === 'right') {
+        top = rect.top + scrollY + (rect.height / 2) - (popoverHeight / 2);
+        left = rect.right + scrollX + 12;
+      } else if (this.activeTourStep.placement === 'left') {
+        top = rect.top + scrollY + (rect.height / 2) - (popoverHeight / 2);
+        left = rect.left + scrollX - popoverWidth - 12;
+      }
+
+      // Boundary checks
+      if (left < 10) left = 10;
+      if (left + popoverWidth > window.innerWidth) left = window.innerWidth - popoverWidth - 10;
+
+      this.tourPopoverTop = `${top}px`;
+      this.tourPopoverLeft = `${left}px`;
+    }, 150);
+  }
+
+  nextTourStep(): void {
+    if (this.tourCurrentIndex === this.tourSteps.length - 1) {
+      this.endTour();
+    } else {
+      this.showTourStep(this.tourCurrentIndex + 1);
+    }
+  }
+
+  prevTourStep(): void {
+    if (this.tourCurrentIndex > 0) {
+      this.showTourStep(this.tourCurrentIndex - 1);
+    }
+  }
+
+  endTour(): void {
+    this.isTourActive = false;
+    document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+    localStorage.setItem('systemOnboardingTourCompleted', 'true');
+  }
+
+  getArrowClass(): Record<string, boolean> {
+    const placement = this.activeTourStep?.placement;
+    return {
+      'tour-arrow-top': placement === 'bottom',
+      'tour-arrow-bottom': placement === 'top',
+      'tour-arrow-left': placement === 'right',
+      'tour-arrow-right': placement === 'left'
+    };
   }
 
   ngOnDestroy(): void {

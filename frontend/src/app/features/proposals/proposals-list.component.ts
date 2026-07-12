@@ -151,7 +151,7 @@ import { environment } from '../../../environments/environment';
                           </div>
                         </div>
                         <div style="margin-bottom:8px;">
-                          <span style="font-size:12px;color:var(--muted);">{{ item.clientName }}</span>
+                          <span style="font-size:12px;color:var(--muted);">{{ item.client?.name }}</span>
                         </div>
                         @if (item.totalAmount) {
                           <div class="meta-chip">
