@@ -27,7 +27,7 @@ import { TimelineService } from '../../core/services/timeline.service';
             placeholder="Escreva um comentário..."
             rows="3"
             class="note-textarea"
-            (keydown.enter)="$event.shiftKey ? null : submitNote()">
+            (keydown.enter)="$any($event).shiftKey ? null : submitNote()">
           </textarea>
           <button mat-flat-button color="primary"
             [disabled]="!noteText.trim() || submitting"

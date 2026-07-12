@@ -196,6 +196,7 @@ export interface Task extends BaseEntity {
 // ── Proposal ─────────────────────────────────────────────────────────
 export interface Proposal extends BaseEntity {
   clientId?: string;
+  clientName?: string;
   dealId?: string;
   title: string;
   proposalCode?: string;
