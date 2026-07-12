@@ -94,57 +94,51 @@ BEGIN
         c_time2 := cast(md5(org_rec.id::text || 'time2') as uuid);
 
         -- Delete ALL rows dependent on seed data to ensure clean repeatable run
-        -- Temporarily disable FK triggers for this session to allow cascade delete
-        SET session_replication_role = replica;
+        -- Ordered by dependency to avoid foreign key errors without superuser role
 
         -- Clean all seed-related data
         DELETE FROM time_entries WHERE project_id IN (c_proj1, c_proj2);
         DELETE FROM time_entries WHERE id IN (c_time1, c_time2);
+        DELETE FROM time_entries WHERE project_id IN (SELECT id FROM projects WHERE client_id = c_client_id);
+        DELETE FROM tasks WHERE client_id = c_client_id;
+        DELETE FROM projects WHERE client_id = c_client_id;
+        DELETE FROM proposal_items WHERE proposal_id IN (SELECT id FROM proposals WHERE client_id = c_client_id);
+        DELETE FROM proposals WHERE client_id = c_client_id;
+        DELETE FROM commissions WHERE id = c_comm;
+        DELETE FROM financial_transactions WHERE id IN (c_tx1, c_tx2, c_tx3);
+        DELETE FROM deals WHERE client_id = c_client_id;
         DELETE FROM client_notes WHERE client_id = c_client_id;
         DELETE FROM client_attachments WHERE client_id = c_client_id;
         DELETE FROM contacts WHERE client_id = c_client_id;
-        DELETE FROM tasks WHERE client_id = c_client_id;
         DELETE FROM support_tickets WHERE client_id = c_client_id;
+        DELETE FROM support_tickets WHERE id IN (c_ticket1, c_ticket2);
         DELETE FROM invoices WHERE client_id = c_client_id;
         DELETE FROM contracts WHERE client_id = c_client_id;
-        DELETE FROM proposal_items WHERE proposal_id IN (SELECT id FROM proposals WHERE client_id = c_client_id);
-        DELETE FROM proposals WHERE client_id = c_client_id;
-        DELETE FROM time_entries WHERE project_id IN (SELECT id FROM projects WHERE client_id = c_client_id);
-        DELETE FROM projects WHERE client_id = c_client_id;
-        DELETE FROM deals WHERE client_id = c_client_id;
-        DELETE FROM commissions WHERE id = c_comm;
-        DELETE FROM commission_rules WHERE id = c_rule;
-        DELETE FROM financial_transactions WHERE id IN (c_tx1, c_tx2, c_tx3);
-        DELETE FROM bank_accounts WHERE id = c_bank_id;
-        DELETE FROM support_tickets WHERE id IN (c_ticket1, c_ticket2);
-        DELETE FROM campaigns WHERE id IN (c_camp1, c_camp2);
         UPDATE leads SET converted_client_id = NULL WHERE converted_client_id = c_client_id;
         DELETE FROM clients WHERE id = c_client_id;
+        DELETE FROM commission_rules WHERE id = c_rule;
+        DELETE FROM bank_accounts WHERE id = c_bank_id;
+        DELETE FROM campaigns WHERE id IN (c_camp1, c_camp2);
         DELETE FROM pipeline_stages WHERE pipeline_id = c_pipe_id;
         DELETE FROM pipelines WHERE id = c_pipe_id;
         DELETE FROM pipeline_stages WHERE id IN (c_stage1, c_stage2, c_stage3, c_stage4, c_stage5);
         DELETE FROM audit_logs WHERE user_id = c_gabriel_id;
         DELETE FROM users WHERE id = c_gabriel_id;
 
-        -- Re-enable FK enforcement
-        SET session_replication_role = DEFAULT;
-
         -- Clean up other manual conflicts with the same email to ensure our ID is unique and works
-        SET session_replication_role = replica;
-        DELETE FROM client_notes WHERE client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com');
-        DELETE FROM client_attachments WHERE client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com');
+        DELETE FROM time_entries WHERE project_id IN (SELECT id FROM projects WHERE client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com'));
         DELETE FROM tasks WHERE client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com');
+        DELETE FROM projects WHERE client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com');
         DELETE FROM proposal_items WHERE proposal_id IN (SELECT id FROM proposals WHERE client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com'));
         DELETE FROM proposals WHERE client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com');
-        DELETE FROM time_entries WHERE project_id IN (SELECT id FROM projects WHERE client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com'));
-        DELETE FROM projects WHERE client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com');
         DELETE FROM deals WHERE client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com');
+        DELETE FROM client_notes WHERE client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com');
+        DELETE FROM client_attachments WHERE client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com');
         DELETE FROM contacts WHERE client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com');
         UPDATE leads SET converted_client_id = NULL WHERE converted_client_id IN (SELECT id FROM clients WHERE email = 'Gabrielalves6p@gmail.com');
         DELETE FROM clients WHERE email = 'Gabrielalves6p@gmail.com';
         DELETE FROM audit_logs WHERE user_id IN (SELECT id FROM users WHERE email = 'Gabrielalves6p@gmail.com');
         DELETE FROM users WHERE email = 'Gabrielalves6p@gmail.com';
-        SET session_replication_role = DEFAULT;
 
         -- 1. Create Gabriel User (SUPER_ADMIN)
         INSERT INTO users (id, organization_id, email, password, name, role, active, created_at, updated_at)
