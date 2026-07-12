@@ -39,13 +39,11 @@ services:
         value: "86400000"
 
   # ─── Frontend: Angular Static Site ─────────────────────────────
-  - type: web
-    runtime: static
+  - type: static
     name: axel-crm-app
     rootDir: frontend
-    plan: free
     buildCommand: npm ci && sed -i "s|__API_URL__|$API_URL|g" src/environments/environment.ts && npm run build -- --configuration production
-    staticPublishPath: dist/crm-axel-frontend/browser
+    publishDir: dist/crm-axel-frontend/browser
     envVars:
       - key: API_URL
         value: https://axel-crm-api.onrender.com/api/v1
