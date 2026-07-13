@@ -28,7 +28,8 @@ public class SecurityConfig {
         "/v3/api-docs",
         "/v3/api-docs/**",
         "/actuator/health",
-        "/actuator/info"
+        "/actuator/info",
+        "/error"
     };
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
