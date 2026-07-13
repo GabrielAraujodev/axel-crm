@@ -29,13 +29,14 @@ public record ProposalRequest(
     BigDecimal captureRate,
     BigDecimal sellerRate,
     BigDecimal partnerRate,
-    BigDecimal collaboratorRate
+    BigDecimal collaboratorRate,
+    UUID dealId
 ) {
     public ProposalRequest(
         String title, String description, ProposalStatus status, LocalDate issueDate,
         LocalDate validUntil, BigDecimal discountAmount, UUID clientId,
         UUID assignedToUserId, UUID partnerId, List<ProposalItemRequest> items
     ) {
-        this(title, description, status, issueDate, validUntil, discountAmount, clientId, assignedToUserId, partnerId, items, null, null, null, null, null, null, null);
+        this(title, description, status, issueDate, validUntil, discountAmount, clientId, assignedToUserId, partnerId, items, null, null, null, null, null, null, null, null);
     }
 }

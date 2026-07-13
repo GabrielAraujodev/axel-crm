@@ -21,4 +21,6 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
     Page<Project> findByClient_IdAndClient_Organization_Id(UUID clientId, UUID orgId, Pageable pageable);
 
     long countByOrganization_IdAndDeletedAtIsNull(UUID orgId);
+
+    boolean existsBySourceProposalIdAndOrganization_IdAndDeletedAtIsNull(UUID sourceProposalId, UUID orgId);
 }

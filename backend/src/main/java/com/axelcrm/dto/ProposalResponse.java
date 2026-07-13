@@ -34,6 +34,7 @@ public record ProposalResponse(
     BigDecimal sellerRate,
     BigDecimal partnerRate,
     BigDecimal collaboratorRate,
+    UUID dealId,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {
@@ -44,6 +45,6 @@ public record ProposalResponse(
         UserResponse assignedTo, List<ProposalItemResponse> items,
         LocalDateTime createdAt, LocalDateTime updatedAt
     ) {
-        this(id, null, null, title, description, status, issueDate, validUntil, totalAmount, discountAmount, approvedAt, client, assignedTo, items, null, null, null, null, null, null, null, null, createdAt, updatedAt);
+        this(id, null, null, title, description, status, issueDate, validUntil, totalAmount, discountAmount, approvedAt, client, assignedTo, items, null, null, null, null, null, null, null, null, null, createdAt, updatedAt);
     }
 }

@@ -103,4 +103,8 @@ public class Proposal extends BaseEntity {
 
     @Column(name = "collaborator_rate", precision = 5, scale = 4)
     private BigDecimal collaboratorRate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deal_id")
+    private Deal deal;
 }

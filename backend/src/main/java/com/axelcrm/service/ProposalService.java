@@ -43,6 +43,12 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.axelcrm.entity.Deal;
+import com.axelcrm.entity.PipelineStage;
+import com.axelcrm.repository.DealRepository;
+import com.axelcrm.repository.PipelineStageRepository;
+import java.util.Comparator;
+
 @Service
 @RequiredArgsConstructor
 @SuppressWarnings("null")
@@ -54,6 +60,9 @@ public class ProposalService {
     private final UserRepository userRepository;
     private final PartnerRepository partnerRepository;
     private final ProjectRepository projectRepository;
+    private final DealRepository dealRepository;
+    private final PipelineStageRepository pipelineStageRepository;
+    private final PipelineEngine pipelineEngine;
 
     public Page<ProposalResponse> findAll(UUID organizationId, Pageable pageable) {
         return proposalRepository.findByOrganization_IdAndDeletedAtIsNull(organizationId, pageable)
@@ -90,6 +99,10 @@ public class ProposalService {
 
         proposal.setProposalCode(proposalCode);
         proposal.setPublicToken(UUID.randomUUID());
+
+        if (request.dealId() != null) {
+            proposal.setDeal(dealRepository.findByIdAndOrganization_IdAndDeletedAtIsNull(request.dealId(), organizationId).orElse(null));
+        }
 
         if (request.assignedToUserId() != null) {
             User assigned = userRepository.findById(request.assignedToUserId())
@@ -141,7 +154,13 @@ public class ProposalService {
 
         proposal.setTotalAmount(totalAmount.subtract(proposal.getDiscountAmount()));
         proposal.setItems(items);
-        proposal = proposalRepository.save(proposal);
+        if (proposal.getStatus() == com.axelcrm.entity.enums.ProposalStatus.ACCEPTED) {
+            proposal.setApprovedAt(LocalDateTime.now());
+            proposal = proposalRepository.save(proposal);
+            triggerPostApprovalActions(organizationId, proposal);
+        } else {
+            proposal = proposalRepository.save(proposal);
+        }
 
         return toResponse(proposal);
     }
@@ -163,6 +182,12 @@ public class ProposalService {
         proposal.setValidUntil(request.validUntil());
         proposal.setDiscountAmount(request.discountAmount() != null ? request.discountAmount() : BigDecimal.ZERO);
         proposal.setClient(client);
+
+        if (request.dealId() != null) {
+            proposal.setDeal(dealRepository.findByIdAndOrganization_IdAndDeletedAtIsNull(request.dealId(), organizationId).orElse(null));
+        } else {
+            proposal.setDeal(null);
+        }
 
         if (request.assignedToUserId() != null) {
             User assigned = userRepository.findById(request.assignedToUserId())
@@ -228,7 +253,19 @@ public class ProposalService {
 
         proposal.setTotalAmount(totalAmount.subtract(proposal.getDiscountAmount()));
         proposal.setItems(items);
-        proposal = proposalRepository.save(proposal);
+
+        com.axelcrm.entity.enums.ProposalStatus oldStatus = proposal.getStatus();
+        if (request.status() != null) {
+            proposal.setStatus(request.status());
+        }
+
+        if (proposal.getStatus() == com.axelcrm.entity.enums.ProposalStatus.ACCEPTED && oldStatus != com.axelcrm.entity.enums.ProposalStatus.ACCEPTED) {
+            proposal.setApprovedAt(LocalDateTime.now());
+            proposal = proposalRepository.save(proposal);
+            triggerPostApprovalActions(organizationId, proposal);
+        } else {
+            proposal = proposalRepository.save(proposal);
+        }
 
         return toResponse(proposal);
     }
@@ -309,6 +346,7 @@ public class ProposalService {
                 proposal.getSellerRate(),
                 proposal.getPartnerRate(),
                 proposal.getCollaboratorRate(),
+                proposal.getDeal() != null ? proposal.getDeal().getId() : null,
                 proposal.getCreatedAt(),
                 proposal.getUpdatedAt()
         );
@@ -517,5 +555,42 @@ public class ProposalService {
                 p.getUpdatedAt(),
                 0L, 0L, java.math.BigDecimal.ZERO
         );
+    }
+
+    private void triggerPostApprovalActions(UUID organizationId, Proposal proposal) {
+        // 1. Transition Deal if linked
+        if (proposal.getDeal() != null) {
+            Deal deal = proposal.getDeal();
+            List<PipelineStage> stages = pipelineStageRepository
+                    .findByPipeline_IdAndOrganization_IdAndDeletedAtIsNull(deal.getPipeline().getId(), organizationId)
+                    .stream()
+                    .sorted(Comparator.comparingInt(PipelineStage::getPosition))
+                    .toList();
+            if (!stages.isEmpty()) {
+                PipelineStage finalStage = stages.get(stages.size() - 1);
+                UUID userId = proposal.getAssignedTo() != null ? proposal.getAssignedTo().getId() : null;
+                pipelineEngine.transitionStage(organizationId, userId, deal, finalStage, "Aprovação automática via Proposta comercial");
+            }
+        }
+
+        // 2. Auto-generate Project
+        boolean projectExists = projectRepository.existsBySourceProposalIdAndOrganization_IdAndDeletedAtIsNull(proposal.getId(), organizationId);
+        if (!projectExists) {
+            Project project = new Project();
+            project.setName("Projeto: " + proposal.getTitle());
+            project.setDescription(proposal.getDescription());
+            project.setStartDate(java.time.LocalDate.now());
+            project.setEndDate(java.time.LocalDate.now().plusMonths(3));
+            project.setBudget(proposal.getTotalAmount());
+            project.setCost(BigDecimal.ZERO);
+            project.setStatus("PLANEJAMENTO");
+            project.setClient(proposal.getClient());
+            project.setManager(proposal.getAssignedTo());
+            project.setSourceProposalId(proposal.getId());
+            var org = new com.axelcrm.commons.entity.Organization();
+            org.setId(organizationId);
+            project.setOrganization(org);
+            projectRepository.save(project);
+        }
     }
 }
